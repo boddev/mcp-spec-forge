@@ -261,7 +261,7 @@ prompts:
   - name: route_question_to_tool
     description: Few-shot template mapping representative eval questions to the tool that should handle them.
 meta:
-  generatedAt: '2026-06-22T17:50:23.960Z'
+  generatedAt: '2026-06-22T19:41:04.416Z'
   generator: mcp-spec-forge
   endpointCount: 7
   questionCount: 6

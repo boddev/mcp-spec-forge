@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import * as cheerio from 'cheerio';
 import type { EndpointCard } from '../types.js';
 import { classifyVerb, extractEntities } from './openapi.js';
 
@@ -26,14 +25,18 @@ export async function loadHtmlDocs(source: string): Promise<EndpointCard[]> {
 }
 
 export function extractFromHtml(html: string): EndpointCard[] {
-  const $ = cheerio.load(html);
-  $('script, style, nav, footer').remove();
-  // Replace remaining tags with spaces so adjacent block elements don't fuse
-  // (e.g. "<h2>GET /widgets</h2><p>List..." must not become "/widgetsList").
-  const inner = $('body').length ? $('body').html() ?? '' : $.root().html() ?? '';
-  const text = inner
+  // Drop scripts/styles/nav/footer and comments, then replace remaining tags with
+  // spaces so adjacent block elements don't fuse (e.g. "<h2>GET /widgets</h2><p>List..."
+  // must not become "/widgetsList"). Pure-regex keeps the skill dependency-free.
+  const stripped = html
+    .replace(/<(script|style|nav|footer)\b[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ');
+  const text = stripped
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
     .replace(/\s+/g, ' ')
     .trim();
 

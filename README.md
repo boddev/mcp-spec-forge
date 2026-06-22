@@ -4,9 +4,10 @@ Ingest an **evaluation set** (questions a generative-AI assistant is expected to
 **documented public APIs**, and forge a **design specification for an MCP server** whose tools
 are grouped by task so that answering a question avoids many API round-trips.
 
-> Built as a **hybrid**: a deterministic TypeScript CLI does parsing / normalization /
-> grouping / spec generation / validation; a companion **Copilot skill** (`skill/SKILL.md`)
-> orchestrates it and layers LLM reasoning for the hard grouping. See [`PLAN.md`](./PLAN.md)
+> **This is a self-contained Copilot skill.** `SKILL.md` is the skill entry point and the
+> deterministic engine ships *with it* as a single dependency-free executable, `bin/forge.cjs`.
+> Drop this folder into your skills directory and it works — nothing to download. The skill runs
+> the bundled engine, then layers LLM reasoning for the hard grouping. See [`PLAN.md`](./PLAN.md)
 > for the full, GPT-5.5-cross-referenced design.
 
 ## What it produces
@@ -20,21 +21,25 @@ For each run you get:
 - `mcp-design.json` — the same design as JSON (for programmatic refinement).
 - `server-scaffold/` — optional runnable TypeScript MCP server skeleton (`--scaffold`).
 
-## Install
+## Install as a skill
+
+Copy this folder to your Copilot skills directory (no build needed — `bin/forge.cjs` is
+prebuilt and committed):
 
 ```pwsh
-cd C:\Users\bodonnell\src\mcp-spec-forge
-npm install
+Copy-Item -Recurse C:\Users\bodonnell\src\mcp-spec-forge $HOME\.copilot\skills\mcp-spec-forge
 ```
 
-## Usage
+The skill folder only needs `SKILL.md` + `bin/forge.cjs` at runtime; the rest is source/dev.
+
+## Run the bundled engine directly
 
 ```pwsh
-# OpenAPI source (file or URL):
-npx tsx src/cli.ts generate -e <eval.csv> -o <api.openapi.yaml> --name my-mcp -O out --scaffold
+# Only Node.js required — no npm install:
+node bin/forge.cjs generate -e <eval.csv> -o <api.openapi.yaml> --name my-mcp -O out --scaffold
 
 # Example (bundled fixtures):
-npx tsx src/cli.ts generate -e tests/fixtures/eval.csv -o tests/fixtures/api.openapi.yaml `
+node bin/forge.cjs generate -e tests/fixtures/eval.csv -o tests/fixtures/api.openapi.yaml `
   --name tracker-mcp -O examples/tracker --scaffold
 ```
 
@@ -68,7 +73,9 @@ cluster as a task-oriented tool. Guardrails flag over-broad ("god") tools and or
 ## Project layout
 
 ```
-src/
+SKILL.md              # skill entry point (Copilot loads this)
+bin/forge.cjs         # bundled, dependency-free engine the skill runs
+src/                  # engine source (bundled into bin/forge.cjs)
   cli.ts  pipeline.ts  types.ts  text.ts
   ingest/   evalSet.ts  openapi.ts  htmlDocs.ts
   analyze/  questionAnalyzer.ts  matcher.ts  grouping.ts
@@ -76,16 +83,16 @@ src/
   validate/ coverage.ts
   llm/      provider.ts
 tests/      pipeline.test.ts  fixtures/
-skill/      SKILL.md
 examples/   tracker/   (sample generated output)
 ```
 
 ## Develop
 
 ```pwsh
+npm install            # dev deps (engine itself needs none at runtime)
 npm test               # vitest suite
 npx tsc --noEmit       # typecheck
-npm run build          # compile to dist/
+npm run bundle         # rebuild bin/forge.cjs (single self-contained file)
 ```
 
 ## License
