@@ -1,10 +1,10 @@
 {
-  "name": "Tracker",
+  "name": "SEC EDGAR Filing",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "bin": {
-    "Tracker": "src/local.ts"
+    "SEC EDGAR Filing": "src/local.ts"
   },
   "scripts": {
     "start:stdio": "tsx src/local.ts",

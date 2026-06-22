@@ -2,26 +2,23 @@ import { runPlan, type PlanStep } from '../api/orchestrate.js';
 
 // Underlying API calls this tool orchestrates (in order), collapsing any
 // list-then-detail (N+1) pattern into a single response:
-//  - GET /projects :: List all projects
+//  - GET /status :: EDGAR System Status
 const plan: PlanStep[] = [
   {
-    "id": "listProjects",
+    "id": "EDGAR System Status",
     "method": "GET",
-    "path": "/projects",
+    "path": "/status",
     "pathParams": [],
-    "purpose": "List all projects"
+    "purpose": "EDGAR System Status"
   }
 ];
 
-export const list_project = {
-  name: "list_project",
-  description: "Task-oriented tool for project. Wraps 1 API endpoint(s) so a question is answered without multiple round-trips. Example question it answers: \"Who is the owner of the billing project?\".",
+export const list_status = {
+  name: "list_status",
+  description: "Task-oriented tool for status. Wraps 1 API endpoint(s) so a question is answered without multiple round-trips. Example question it answers: \"Is the EDGAR system currently online and accepting filings?\".",
   inputSchema: {
   "type": "object",
   "properties": {
-    "status": {
-      "type": "string"
-    },
     "max_items": {
       "type": "integer",
       "description": "Maximum records to return (caps pagination).",

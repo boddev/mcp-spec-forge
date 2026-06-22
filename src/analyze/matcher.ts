@@ -20,6 +20,7 @@ interface ScoredEndpoint {
   tokens: Set<string>;
   entitySet: Set<string>;
   fieldTokens: Set<string>;
+  pathTokens: Set<string>;
 }
 
 function indexEndpoints(endpoints: EndpointCard[]): ScoredEndpoint[] {
@@ -30,8 +31,19 @@ function indexEndpoints(endpoints: EndpointCard[]): ScoredEndpoint[] {
       tokens: new Set(tokenize(text)),
       entitySet: new Set(card.entities),
       fieldTokens: new Set(card.outputs.flatMap((f) => tokenize(f))),
+      pathTokens: pathSegmentTokens(card.path),
     };
   });
+}
+
+/** Tokens from concrete (non-parameter) path segments — the most specific
+ *  routing signal, e.g. `/fm/{cik}/ccc` -> {fm, ccc}. Lets a question that names
+ *  a sub-resource win over a generic container endpoint that merely shares words. */
+function pathSegmentTokens(path: string): Set<string> {
+  const segs = path
+    .split('/')
+    .filter((s) => s && !s.startsWith('{') && !s.startsWith('$') && !s.startsWith('_'));
+  return new Set(segs.flatMap((s) => tokenize(s)));
 }
 
 /**
@@ -53,14 +65,15 @@ export function planQuestions(
     const qEntities = new Set(q.entities);
 
     const scored: EndpointMatch[] = indexed
-      .map(({ card, tokens, entitySet, fieldTokens }) => {
+      .map(({ card, tokens, entitySet, fieldTokens, pathTokens }) => {
         const lexical = overlapScore(qTokens, tokens);
         const entity = jaccard(qEntities, entitySet);
         const fields = overlapScore(qEntities, fieldTokens) * 0.6;
+        const pathHit = overlapScore(pathTokens, qTokens);
         const verbBonus = verbAffinity(q.verb, card.verb);
         const confidence = card.confidence;
         const score =
-          (lexical * 0.5 + entity * 0.3 + fields * 0.2 + verbBonus) *
+          (lexical * 0.45 + entity * 0.3 + fields * 0.15 + pathHit * 0.25 + verbBonus) *
           confidence *
           specialOpPenalty(card.path);
         return { endpoint: card, score };

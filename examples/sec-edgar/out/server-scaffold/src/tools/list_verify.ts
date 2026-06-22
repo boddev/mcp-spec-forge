@@ -2,24 +2,29 @@ import { runPlan, type PlanStep } from '../api/orchestrate.js';
 
 // Underlying API calls this tool orchestrates (in order), collapsing any
 // list-then-detail (N+1) pattern into a single response:
-//  - GET /projects :: List all projects
+//  - GET /fm/{cik}/verify :: Filing credentials verification
 const plan: PlanStep[] = [
   {
-    "id": "listProjects",
+    "id": "Filing Credentials Verification",
     "method": "GET",
-    "path": "/projects",
-    "pathParams": [],
-    "purpose": "List all projects"
+    "path": "/fm/{cik}/verify",
+    "pathParams": [
+      "cik"
+    ],
+    "purpose": "Filing credentials verification"
   }
 ];
 
-export const list_project = {
-  name: "list_project",
-  description: "Task-oriented tool for project. Wraps 1 API endpoint(s) so a question is answered without multiple round-trips. Example question it answers: \"Who is the owner of the billing project?\".",
+export const list_verify = {
+  name: "list_verify",
+  description: "Task-oriented tool for verify. Wraps 1 API endpoint(s) so a question is answered without multiple round-trips. Example question it answers: \"Verify that my filing credentials are valid before I submit a filing.\".",
   inputSchema: {
   "type": "object",
+  "required": [
+    "cik"
+  ],
   "properties": {
-    "status": {
+    "cik": {
       "type": "string"
     },
     "max_items": {

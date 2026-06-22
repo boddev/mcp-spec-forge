@@ -47,6 +47,10 @@ node bin/forge.cjs generate -e tests/fixtures/eval.csv -o tests/fixtures/api.ope
 # Real-world example — live FHIR R4 (HLS) spec straight from a URL:
 node bin/forge.cjs generate -e examples/fhir/eval.csv -o https://hapi.fhir.org/baseR4/api-docs `
   --name "FHIR R4" -O examples/fhir/out --scaffold --transport both
+
+# Real-world example — SEC EDGAR filer/submission API (FSI), OpenAPI 3.1 spec:
+node bin/forge.cjs generate -e examples/sec-edgar/eval.csv -o examples/sec-edgar/sec-edgar.openapi.json `
+  --name "SEC EDGAR Filing" -O examples/sec-edgar/out --scaffold --transport both
 ```
 
 Options:
@@ -108,6 +112,8 @@ src/                  # engine source (bundled into bin/forge.cjs)
 tests/      pipeline.test.ts  fixtures/
 examples/   tracker/   (sample generated output)
             fhir/      (real-world HLS example: eval set + live-FHIR spec output)
+            pokeapi/   (real-world example: eval set + PokeAPI OpenAPI spec output)
+            sec-edgar/ (real-world FSI example: eval set + SEC EDGAR OpenAPI 3.1 output)
 ```
 
 ## Develop

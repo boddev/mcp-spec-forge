@@ -1,4 +1,4 @@
-const BASE_URL = process.env.API_BASE_URL ?? "https://api.tracker.example.com/v1";
+const BASE_URL = process.env.API_BASE_URL ?? "https://api.edgarfiling.sec.gov";
 const TOKEN = process.env["API_TOKEN"];
 
 export interface CallOpts {

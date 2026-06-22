@@ -2,24 +2,29 @@ import { runPlan, type PlanStep } from '../api/orchestrate.js';
 
 // Underlying API calls this tool orchestrates (in order), collapsing any
 // list-then-detail (N+1) pattern into a single response:
-//  - GET /projects :: List all projects
+//  - GET /fm/{cik}/delegations :: View delegations
 const plan: PlanStep[] = [
   {
-    "id": "listProjects",
+    "id": "View Delegations",
     "method": "GET",
-    "path": "/projects",
-    "pathParams": [],
-    "purpose": "List all projects"
+    "path": "/fm/{cik}/delegations",
+    "pathParams": [
+      "cik"
+    ],
+    "purpose": "View delegations"
   }
 ];
 
-export const list_project = {
-  name: "list_project",
-  description: "Task-oriented tool for project. Wraps 1 API endpoint(s) so a question is answered without multiple round-trips. Example question it answers: \"Who is the owner of the billing project?\".",
+export const list_delegation = {
+  name: "list_delegation",
+  description: "Task-oriented tool for delegation. Wraps 1 API endpoint(s) so a question is answered without multiple round-trips. Example question it answers: \"View the delegations associated with the CIK.\".",
   inputSchema: {
   "type": "object",
+  "required": [
+    "cik"
+  ],
   "properties": {
-    "status": {
+    "cik": {
       "type": "string"
     },
     "max_items": {

@@ -337,6 +337,7 @@ function toolName(cards: EndpointCard[], entities: string[], isChain: boolean): 
   else if (verbs.has('list')) action = 'list';
   else if (verbs.has('create')) action = 'create';
   else if (verbs.has('update')) action = 'update';
+  else if (verbs.has('delete')) action = 'delete';
   const ents = entities.slice(0, 2);
   return toSnakeCase([action, ...ents]) || 'get_data';
 }

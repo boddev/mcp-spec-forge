@@ -1,7 +1,23 @@
-import { apiCall } from '../api/client.js';
+import { runPlan, type PlanStep } from '../api/orchestrate.js';
 
-// Auto-generated stub. Implement the orchestration described below.
+// Underlying API calls this tool orchestrates (in order), collapsing any
+// list-then-detail (N+1) pattern into a single response:
+//  - GET /projects/{projectId}/tasks :: List tasks for a project
+const plan: PlanStep[] = [
+  {
+    "id": "listProjectTasks",
+    "method": "GET",
+    "path": "/projects/{projectId}/tasks",
+    "pathParams": [
+      "projectId"
+    ],
+    "purpose": "List tasks for a project"
+  }
+];
+
 export const list_project_task = {
+  name: "list_project_task",
+  description: "Task-oriented tool for project, task. Wraps 1 API endpoint(s) so a question is answered without multiple round-trips. Example question it answers: \"List all active projects and their tasks\".",
   inputSchema: {
   "type": "object",
   "required": [
@@ -18,14 +34,6 @@ export const list_project_task = {
     }
   }
 } as const,
-
-  // Underlying API calls this tool should orchestrate (in order):
-  //  - GET /projects/{projectId}/tasks :: List tasks for a project
-  async handler(args: Record<string, unknown>) {
-    // TODO: orchestrate the underlying calls above, collapsing list-then-detail
-    // patterns into a single response. Respect max_items / include_details inputs.
-    void apiCall;
-    void args;
-    return { content: [{ type: 'text', text: 'Not implemented: list_project_task' }] };
-  },
+  plan,
+  handler: (args: Record<string, unknown>) => runPlan(plan, args),
 };

@@ -7420,9 +7420,14 @@ function indexEndpoints(endpoints) {
       card,
       tokens: new Set(tokenize(text)),
       entitySet: new Set(card.entities),
-      fieldTokens: new Set(card.outputs.flatMap((f) => tokenize(f)))
+      fieldTokens: new Set(card.outputs.flatMap((f) => tokenize(f))),
+      pathTokens: pathSegmentTokens(card.path)
     };
   });
+}
+function pathSegmentTokens(path) {
+  const segs = path.split("/").filter((s) => s && !s.startsWith("{") && !s.startsWith("$") && !s.startsWith("_"));
+  return new Set(segs.flatMap((s) => tokenize(s)));
 }
 function planQuestions(questions, endpoints, opts = {}) {
   const topK = opts.topK ?? 4;
@@ -7431,13 +7436,14 @@ function planQuestions(questions, endpoints, opts = {}) {
   return questions.map((q) => {
     const qTokens = new Set(q.keywords);
     const qEntities = new Set(q.entities);
-    const scored = indexed.map(({ card, tokens, entitySet, fieldTokens }) => {
+    const scored = indexed.map(({ card, tokens, entitySet, fieldTokens, pathTokens }) => {
       const lexical = overlapScore(qTokens, tokens);
       const entity = jaccard(qEntities, entitySet);
       const fields = overlapScore(qEntities, fieldTokens) * 0.6;
+      const pathHit = overlapScore(pathTokens, qTokens);
       const verbBonus = verbAffinity(q.verb, card.verb);
       const confidence = card.confidence;
-      const score = (lexical * 0.5 + entity * 0.3 + fields * 0.2 + verbBonus) * confidence * specialOpPenalty(card.path);
+      const score = (lexical * 0.45 + entity * 0.3 + fields * 0.15 + pathHit * 0.25 + verbBonus) * confidence * specialOpPenalty(card.path);
       return { endpoint: card, score };
     }).filter((m) => m.score >= minScore).sort((a, b) => b.score - a.score).slice(0, topK);
     const isChain = q.needsDetailExpansion && scored.some((m) => m.endpoint.verb === "list" || m.endpoint.verb === "search") && scored.some((m) => m.endpoint.verb === "get");
@@ -7741,6 +7747,7 @@ function toolName(cards, entities, isChain) {
   else if (verbs.has("list")) action = "list";
   else if (verbs.has("create")) action = "create";
   else if (verbs.has("update")) action = "update";
+  else if (verbs.has("delete")) action = "delete";
   const ents = entities.slice(0, 2);
   return toSnakeCase([action, ...ents]) || "get_data";
 }

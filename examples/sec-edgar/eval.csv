@@ -1,0 +1,15 @@
+prompt,expected_answer,source_location
+"How do I view the filer account information for a given CIK?","Retrieve the filer account record for the CIK, including company name, address, and contact details.",https://api.edgarfiling.sec.gov/docs/index.html
+"Is the EDGAR system currently online and accepting filings?","Return the current EDGAR system status indicating whether filing is available.",https://api.edgarfiling.sec.gov/docs/index.html
+"Verify that my filing credentials are valid before I submit a filing.","Confirm the filer's credentials (CIK/CCC) are valid and authorized to file.",https://api.edgarfiling.sec.gov/docs/index.html
+"Submit a single live filing to EDGAR.","Accept and queue a single live submission, returning an accession number.",https://api.edgarfiling.sec.gov/docs/index.html
+"Submit multiple filings at once in one bulk live submission.","Accept a bulk live submission of several filings and return their accession numbers.",https://api.edgarfiling.sec.gov/docs/index.html
+"Check the processing status of one submission by its accession number.","Return the status of the single submission identified by the accession number.",https://api.edgarfiling.sec.gov/docs/index.html
+"Check the status of several of my submissions at the same time.","Return the statuses for a list of submissions in one call.",https://api.edgarfiling.sec.gov/docs/index.html
+"List the individuals authorized on the account and the role each one has.","Return the individuals associated with the CIK along with each person's assigned role.",https://api.edgarfiling.sec.gov/docs/index.html
+"Add a new individual to the account.","Add a person to the filer account for the CIK with a specified role.",https://api.edgarfiling.sec.gov/docs/index.html
+"Change the role assigned to an individual on my account.","Update the role of an existing individual on the filer account.",https://api.edgarfiling.sec.gov/docs/index.html
+"Remove an individual from the account.","Remove the specified individual from the filer account for the CIK.",https://api.edgarfiling.sec.gov/docs/index.html
+"Generate a new CCC (CIK Confirmation Code) for the CIK.","Generate a new system-assigned CCC for the CIK.",https://api.edgarfiling.sec.gov/docs/index.html
+"View the delegations associated with the CIK.","Return the delegation relationships for the CIK.",https://api.edgarfiling.sec.gov/docs/index.html
+"Send a delegation invitation to another filer.","Create and send a delegation invitation from the CIK to another filer.",https://api.edgarfiling.sec.gov/docs/index.html

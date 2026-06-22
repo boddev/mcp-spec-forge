@@ -1,6 +1,6 @@
 {
   "server": {
-    "name": "pokeapi-mcp",
+    "name": "PokeAPI",
     "description": "MCP server designed from an eval set of 12 questions over 98 documented API endpoint(s).",
     "version": "0.1.0",
     "transport": "stdio | streamable-http",
@@ -12,18 +12,14 @@
   },
   "tools": [
     {
-      "name": "summarize_ability_provide",
-      "description": "Task-oriented tool for ability, provide, passive, berry. Wraps 3 API endpoint(s), collapsing a list-then-detail (N+1) pattern into a single call so a question is answered without multiple round-trips. Example question it answers: \"What are Pikachu's abilities and what does each one do?\".",
+      "name": "summarize_ability",
+      "description": "Task-oriented tool for ability. Wraps 2 API endpoint(s), collapsing a list-then-detail (N+1) pattern into a single call so a question is answered without multiple round-trips. Example question it answers: \"What are Pikachu's abilities and what does each one do?\".",
       "evalCoverage": [
         "q1",
-        "q5",
         "q6"
       ],
       "entities": [
-        "ability",
-        "provide",
-        "passive",
-        "berry"
+        "ability"
       ],
       "inputSchema": {
         "type": "object",
@@ -115,18 +111,6 @@
           "condition": "include_details == true",
           "concurrency": 5,
           "maxItems": 50
-        },
-        {
-          "id": "berry_flavor_retrieve",
-          "endpoint": "GET /api/v2/berry-flavor/{id}/",
-          "purpose": "Get berries by flavor",
-          "params": {
-            "id": "{id}"
-          },
-          "foreach": "ability_list.items",
-          "condition": "include_details == true",
-          "concurrency": 5,
-          "maxItems": 50
         }
       ],
       "pagination": {
@@ -154,8 +138,8 @@
       "reviewFlags": []
     },
     {
-      "name": "list_type",
-      "description": "Task-oriented tool for type. Wraps 1 API endpoint(s) so a question is answered without multiple round-trips. Example question it answers: \"List the first 20 Pokemon and show each one's types.\".",
+      "name": "summarize_type",
+      "description": "Task-oriented tool for type. Wraps 2 API endpoint(s), collapsing a list-then-detail (N+1) pattern into a single call so a question is answered without multiple round-trips. Example question it answers: \"List the first 20 Pokemon and show each one's types.\".",
       "evalCoverage": [
         "q2",
         "q10"
@@ -165,7 +149,14 @@
       ],
       "inputSchema": {
         "type": "object",
+        "required": [
+          "id"
+        ],
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "This parameter can be a string or an integer."
+          },
           "q": {
             "type": "string",
             "description": "> Only available locally and not at [pokeapi.co](https://pokeapi.co/docs/v2)\nCase-insensitive query applied on the `name` property. "
@@ -174,6 +165,11 @@
             "type": "integer",
             "description": "Maximum records to return (caps pagination).",
             "default": 50
+          },
+          "include_details": {
+            "type": "boolean",
+            "description": "Expand each result with its detail/sub-resource calls in one round-trip.",
+            "default": true
           }
         }
       },
@@ -202,6 +198,15 @@
                 },
                 "url": {
                   "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "damage_relations": {
+                  "type": "string"
+                },
+                "no_damage_to": {
+                  "type": "string"
                 }
               }
             }
@@ -220,6 +225,18 @@
           "id": "type_list",
           "endpoint": "GET /api/v2/type/",
           "purpose": "List types"
+        },
+        {
+          "id": "type_retrieve",
+          "endpoint": "GET /api/v2/type/{id}/",
+          "purpose": "Get types",
+          "params": {
+            "id": "{id}"
+          },
+          "foreach": "type_list.items",
+          "condition": "include_details == true",
+          "concurrency": 5,
+          "maxItems": 50
         }
       ],
       "pagination": {
@@ -237,7 +254,7 @@
         }
       },
       "errors": {
-        "partialResults": false,
+        "partialResults": true,
         "userVisibleMessages": {
           "auth_failed": "Authentication failed. Check the configured credentials.",
           "rate_limited": "The API rate limit was reached. Partial results may be returned.",
@@ -414,6 +431,135 @@
       },
       "errors": {
         "partialResults": false,
+        "userVisibleMessages": {
+          "auth_failed": "Authentication failed. Check the configured credentials.",
+          "rate_limited": "The API rate limit was reached. Partial results may be returned.",
+          "not_found": "No matching records were found for the given inputs."
+        }
+      },
+      "reviewFlags": []
+    },
+    {
+      "name": "summarize_berry_flavor",
+      "description": "Task-oriented tool for berry, flavor. Wraps 2 API endpoint(s), collapsing a list-then-detail (N+1) pattern into a single call so a question is answered without multiple round-trips. Example question it answers: \"Which berries affect a Pokemon's happiness, and what flavor is each one?\".",
+      "evalCoverage": [
+        "q5"
+      ],
+      "entities": [
+        "berry",
+        "flavor"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "This parameter can be a string or an integer."
+          },
+          "q": {
+            "type": "string",
+            "description": "> Only available locally and not at [pokeapi.co](https://pokeapi.co/docs/v2)\nCase-insensitive query applied on the `name` property. "
+          },
+          "max_items": {
+            "type": "integer",
+            "description": "Maximum records to return (caps pagination).",
+            "default": 50
+          },
+          "include_details": {
+            "type": "boolean",
+            "description": "Expand each result with its detail/sub-resource calls in one round-trip.",
+            "default": true
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "string"
+                },
+                "next": {
+                  "type": "string"
+                },
+                "previous": {
+                  "type": "string"
+                },
+                "results": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "berries": {
+                  "type": "string"
+                },
+                "potency": {
+                  "type": "string"
+                },
+                "berry": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "count": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "True if max_items capped the result."
+          }
+        }
+      },
+      "underlyingCalls": [
+        {
+          "id": "berry_flavor_list",
+          "endpoint": "GET /api/v2/berry-flavor/",
+          "purpose": "List berry flavors"
+        },
+        {
+          "id": "berry_flavor_retrieve",
+          "endpoint": "GET /api/v2/berry-flavor/{id}/",
+          "purpose": "Get berries by flavor",
+          "params": {
+            "id": "{id}"
+          },
+          "foreach": "berry_flavor_list.items",
+          "condition": "include_details == true",
+          "concurrency": 5,
+          "maxItems": 50
+        }
+      ],
+      "pagination": {
+        "strategy": "auto_paginate_until_limit",
+        "maxPages": 5
+      },
+      "rateLimiting": {
+        "strategy": "bounded_concurrency",
+        "retry": {
+          "onStatus": [
+            429,
+            503
+          ],
+          "backoff": "exponential"
+        }
+      },
+      "errors": {
+        "partialResults": true,
         "userVisibleMessages": {
           "auth_failed": "Authentication failed. Check the configured credentials.",
           "rate_limited": "The API rate limit was reached. Partial results may be returned.",
@@ -799,7 +945,7 @@
       "reviewFlags": []
     },
     {
-      "name": "get_pokemon_species",
+      "name": "list_pokemon_species",
       "description": "Task-oriented tool for pokemon, species. Wraps 1 API endpoint(s) so a question is answered without multiple round-trips. Example question it answers: \"For the Gen 1 generation, which Pokemon species were introduced?\".",
       "evalCoverage": [
         "q12"
@@ -810,67 +956,67 @@
       ],
       "inputSchema": {
         "type": "object",
-        "required": [
-          "id"
-        ],
         "properties": {
-          "id": {
+          "q": {
             "type": "string",
-            "description": "This parameter can be a string or an integer."
+            "description": "> Only available locally and not at [pokeapi.co](https://pokeapi.co/docs/v2)\nCase-insensitive query applied on the `name` property. "
+          },
+          "max_items": {
+            "type": "integer",
+            "description": "Maximum records to return (caps pagination).",
+            "default": 50
           }
         }
       },
       "outputSchema": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string"
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "string"
+                },
+                "next": {
+                  "type": "string"
+                },
+                "previous": {
+                  "type": "string"
+                },
+                "results": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                }
+              }
+            }
           },
-          "name": {
-            "type": "string"
+          "count": {
+            "type": "integer"
           },
-          "order": {
-            "type": "string"
-          },
-          "gender_rate": {
-            "type": "string"
-          },
-          "capture_rate": {
-            "type": "string"
-          },
-          "base_happiness": {
-            "type": "string"
-          },
-          "is_baby": {
-            "type": "string"
-          },
-          "is_legendary": {
-            "type": "string"
-          },
-          "is_mythical": {
-            "type": "string"
-          },
-          "hatch_counter": {
-            "type": "string"
-          },
-          "has_gender_differences": {
-            "type": "string"
-          },
-          "forms_switchable": {
-            "type": "string"
+          "truncated": {
+            "type": "boolean",
+            "description": "True if max_items capped the result."
           }
         }
       },
       "underlyingCalls": [
         {
-          "id": "pokemon_species_retrieve",
-          "endpoint": "GET /api/v2/pokemon-species/{id}/",
-          "purpose": "Get pokemon species",
-          "params": {
-            "id": "{id}"
-          }
+          "id": "pokemon_species_list",
+          "endpoint": "GET /api/v2/pokemon-species/",
+          "purpose": "List pokemon species"
         }
       ],
+      "pagination": {
+        "strategy": "auto_paginate_until_limit",
+        "maxPages": 5
+      },
       "rateLimiting": {
         "strategy": "bounded_concurrency",
         "retry": {
@@ -915,7 +1061,7 @@
     }
   ],
   "meta": {
-    "generatedAt": "2026-06-22T22:05:28.834Z",
+    "generatedAt": "2026-06-22T23:06:15.514Z",
     "generator": "mcp-spec-forge",
     "endpointCount": 98,
     "questionCount": 12,
