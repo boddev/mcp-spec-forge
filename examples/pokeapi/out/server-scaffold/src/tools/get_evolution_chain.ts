@@ -1,7 +1,23 @@
-import { apiCall } from '../api/client.js';
+import { runPlan, type PlanStep } from '../api/orchestrate.js';
 
-// Auto-generated stub. Implement the orchestration described below.
+// Underlying API calls this tool orchestrates (in order), collapsing any
+// list-then-detail (N+1) pattern into a single response:
+//  - GET /api/v2/evolution-chain/{id}/ :: Get evolution chain
+const plan: PlanStep[] = [
+  {
+    "id": "evolution_chain_retrieve",
+    "method": "GET",
+    "path": "/api/v2/evolution-chain/{id}/",
+    "pathParams": [
+      "id"
+    ],
+    "purpose": "Get evolution chain"
+  }
+];
+
 export const get_evolution_chain = {
+  name: "get_evolution_chain",
+  description: "Task-oriented tool for evolution, chain. Wraps 1 API endpoint(s) so a question is answered without multiple round-trips. Example question it answers: \"What is the evolution chain for Bulbasaur?\".",
   inputSchema: {
   "type": "object",
   "required": [
@@ -14,14 +30,6 @@ export const get_evolution_chain = {
     }
   }
 } as const,
-
-  // Underlying API calls this tool should orchestrate (in order):
-  //  - GET /api/v2/evolution-chain/{id}/ :: Get evolution chain
-  async handler(args: Record<string, unknown>) {
-    // TODO: orchestrate the underlying calls above, collapsing list-then-detail
-    // patterns into a single response. Respect max_items / include_details inputs.
-    void apiCall;
-    void args;
-    return { content: [{ type: 'text', text: 'Not implemented: get_evolution_chain' }] };
-  },
+  plan,
+  handler: (args: Record<string, unknown>) => runPlan(plan, args),
 };

@@ -51,7 +51,8 @@ npm install && npm run bundle
 
 2. **Run the engine** with the command above. It writes `mcp-design.yaml` (canonical),
    `mcp-design.md` (rationale + coverage matrix), `mcp-design.json`, and — with `--scaffold` — a
-   runnable TypeScript MCP server skeleton under `server-scaffold/`.
+   **runnable** TypeScript MCP server under `server-scaffold/` that ships both transports (local
+   stdio + remote Streamable HTTP). Add `--transport stdio|http|both` to choose (default `both`).
 
 3. **Read the coverage report** (printed, and in `mcp-design.md`):
    - Every eval question should map to a tool (coverage = 100%).
@@ -70,8 +71,16 @@ npm install && npm run bundle
    inputs).
 
 5. **Hand off.** Summarize: number of tools, coverage %, any review flags, and where the files
-   are. If the user wants an implementation, point them at `server-scaffold/` and fill in each
-   stub handler tool by tool.
+   are. If the user wants an implementation, offer to **build the MCP server** from
+   `server-scaffold/` and ask whether they want it **local** or **remote**:
+   - **Local (stdio)** — `npm install && npm run start:stdio`. For desktop clients (Copilot CLI,
+     Claude Desktop) that spawn the server as a subprocess. No auth needed.
+   - **Remote (Streamable HTTP)** — `npm install && npm run start:http` (serves `POST /mcp`). For
+     hosted/shared use; remind them to add auth (OAuth 2.1 / bearer), TLS, CORS, and Origin checks
+     before exposing it publicly.
+   The tools are identical across both — only the transport differs. Set `API_BASE_URL` (and any
+   auth env var named in `.env.example`) so the server reaches the real API, then review each tool
+   in `src/tools/` and tune param binding / pagination for that API.
 
 ## Design rules the output must satisfy
 - **No naive 1-endpoint-1-tool.** Group endpoints by the information needs in the eval set.

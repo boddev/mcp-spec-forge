@@ -4,7 +4,8 @@ server:
   name: pokeapi-mcp
   description: MCP server designed from an eval set of 12 questions over 98 documented API endpoint(s).
   version: 0.1.0
-  transport: stdio
+  transport: stdio | streamable-http
+  baseUrl: https://pokeapi.co
 auth:
   type: api_key
   envVar: API_KEY
@@ -665,7 +666,7 @@ prompts:
   - name: route_question_to_tool
     description: Few-shot template mapping representative eval questions to the tool that should handle them.
 meta:
-  generatedAt: '2026-06-22T19:57:46.801Z'
+  generatedAt: '2026-06-22T22:05:28.834Z'
   generator: mcp-spec-forge
   endpointCount: 98
   questionCount: 12

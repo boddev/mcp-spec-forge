@@ -18,10 +18,12 @@ program
   .option('-n, --name <name>', 'MCP server name', 'forged-mcp-server')
   .option('--description <text>', 'server description')
   .option('-O, --out <dir>', 'output directory', './out')
-  .option('--scaffold', 'also emit a runnable TypeScript MCP server scaffold', false)
+  .option('--scaffold', 'also emit a runnable TypeScript MCP server (local + remote)', false)
+  .option('--transport <mode>', 'server transport(s) to emit: stdio | http | both', 'both')
   .option('--llm', 'enable LLM grouping refinement (requires provider)', false)
   .action(async (opts) => {
     try {
+      const transport = ['stdio', 'http', 'both'].includes(opts.transport) ? opts.transport : 'both';
       const result = await forge({
         evalPath: opts.eval,
         openapiSources: opts.openapi,
@@ -29,6 +31,7 @@ program
         serverName: opts.name,
         description: opts.description,
         mode: opts.llm ? 'llm' : 'deterministic',
+        transport,
       });
 
       const written = writeResult(result, opts.out, opts.scaffold);
@@ -48,6 +51,12 @@ program
       }
       console.log('\n  Output:');
       for (const f of written) console.log(`   - ${f}`);
+      if (opts.scaffold) {
+        console.log('\n  Runnable MCP server emitted under server-scaffold/:');
+        console.log('   cd ' + opts.out + '\\server-scaffold && npm install');
+        if (transport !== 'http') console.log('   npm run start:stdio   # local (stdio)');
+        if (transport !== 'stdio') console.log('   npm run start:http    # remote (Streamable HTTP)');
+      }
       console.log('');
     } catch (err) {
       console.error(`✖ ${(err as Error).message}`);

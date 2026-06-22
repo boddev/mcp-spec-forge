@@ -19,7 +19,9 @@ For each run you get:
   pagination, rate-limiting, and partial-result behavior, plus the eval questions it covers.
 - `mcp-design.md` — human rationale + an **eval coverage matrix** + review checklist.
 - `mcp-design.json` — the same design as JSON (for programmatic refinement).
-- `server-scaffold/` — optional runnable TypeScript MCP server skeleton (`--scaffold`).
+- `server-scaffold/` — optional **runnable** TypeScript MCP server (`--scaffold`). Tool handlers
+  execute the documented API calls and collapse N+1 chains; it ships **both** transports —
+  `local.ts` (stdio) for desktop clients and `http.ts` (Streamable HTTP) for remote hosting.
 
 ## Install as a skill
 
@@ -53,8 +55,25 @@ Options:
 | `-n, --name <name>` | MCP server name |
 | `--description <text>` | Server description |
 | `-O, --out <dir>` | Output directory (default `./out`) |
-| `--scaffold` | Also emit a runnable TypeScript MCP server scaffold |
+| `--scaffold` | Also emit a runnable TypeScript MCP server (local + remote) |
+| `--transport <mode>` | Which transport(s) to emit: `stdio`, `http`, or `both` (default `both`) |
 | `--llm` | Marks output `mode: llm` (refinement is performed by the skill) |
+
+## Local vs. remote MCP server
+
+The generated `server-scaffold/` runs either way — the tools are identical and only the
+transport changes:
+
+| | Local | Remote |
+|---|---|---|
+| Entry | `src/local.ts` → `npm run start:stdio` | `src/http.ts` → `npm run start:http` |
+| Transport | **stdio** (client spawns the process) | **Streamable HTTP** (`POST /mcp`) |
+| Use for | desktop clients (Copilot CLI, Claude Desktop) | hosted / shared / cloud |
+| Auth | inherits your env | add OAuth 2.1 / bearer, TLS, CORS, Origin checks |
+
+`src/buildServer.ts` registers the tools once; the two entrypoints just attach a transport.
+The target API base URL comes from the spec's `servers` block and is overridable at runtime via
+`API_BASE_URL` (see the generated `.env.example`).
 
 ## How it works
 

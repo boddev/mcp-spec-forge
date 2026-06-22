@@ -8,7 +8,7 @@ type AnyObj = Record<string, any>;
 const HTTP_METHODS = ['get', 'put', 'post', 'delete', 'patch', 'head', 'options'];
 
 /** Load an OpenAPI document from a local file path or a URL. */
-export async function loadOpenApi(source: string): Promise<EndpointCard[]> {
+export async function loadOpenApi(source: string): Promise<{ endpoints: EndpointCard[]; baseUrl?: string }> {
   let raw: string;
   if (/^https?:\/\//i.test(source)) {
     const res = await fetch(source);
@@ -18,7 +18,14 @@ export async function loadOpenApi(source: string): Promise<EndpointCard[]> {
     raw = readFileSync(source, 'utf8');
   }
   const doc = parseDoc(raw);
-  return normalizeOpenApi(doc);
+  return { endpoints: normalizeOpenApi(doc), baseUrl: extractBaseUrl(doc) };
+}
+
+/** Pull the first concrete server URL from an OpenAPI document, if present. */
+export function extractBaseUrl(doc: AnyObj): string | undefined {
+  const url = doc?.servers?.[0]?.url;
+  if (typeof url === 'string' && /^https?:\/\//i.test(url)) return url.replace(/\/+$/, '');
+  return undefined;
 }
 
 export function parseDoc(raw: string): AnyObj {

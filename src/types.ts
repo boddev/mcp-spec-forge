@@ -119,6 +119,8 @@ export interface McpDesign {
     description: string;
     version: string;
     transport: string;
+    /** Base URL of the documented API (from OpenAPI `servers`), if known. */
+    baseUrl?: string;
   };
   auth: {
     type: string;

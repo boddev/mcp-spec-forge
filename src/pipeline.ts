@@ -10,7 +10,7 @@ import { groupIntoTools } from './analyze/grouping.js';
 import { buildDesign } from './generate/specBuilder.js';
 import { emitYaml } from './generate/emitYaml.js';
 import { emitMarkdown } from './generate/emitMarkdown.js';
-import { scaffoldServer } from './generate/scaffold.js';
+import { scaffoldServer, type ServerTransport } from './generate/scaffold.js';
 import { validateDesign } from './validate/coverage.js';
 
 export interface ForgeInput {
@@ -20,6 +20,8 @@ export interface ForgeInput {
   serverName: string;
   description?: string;
   mode?: 'deterministic' | 'llm';
+  /** Which transport entrypoints to emit in the scaffold. */
+  transport?: ServerTransport;
 }
 
 export interface ForgeResult {
@@ -37,8 +39,11 @@ export async function forge(input: ForgeInput): Promise<ForgeResult> {
   const questions = loadEvalSet(input.evalPath);
 
   const endpoints: EndpointCard[] = [];
+  let baseUrl: string | undefined;
   for (const src of input.openapiSources ?? []) {
-    endpoints.push(...(await loadOpenApi(src)));
+    const { endpoints: eps, baseUrl: b } = await loadOpenApi(src);
+    endpoints.push(...eps);
+    if (!baseUrl && b) baseUrl = b;
   }
   for (const src of input.htmlSources ?? []) {
     endpoints.push(...(await loadHtmlDocs(src)));
@@ -58,12 +63,13 @@ export async function forge(input: ForgeInput): Promise<ForgeResult> {
     endpoints,
     questions: facets,
     mode: input.mode ?? 'deterministic',
+    baseUrl,
   });
 
   const report = validateDesign(design, plans, endpoints);
   const yaml = emitYaml(design);
   const markdown = emitMarkdown(design, report);
-  const scaffold = scaffoldServer(design);
+  const scaffold = scaffoldServer(design, input.transport ?? 'both');
 
   return { design, report, endpoints, questions, yaml, markdown, scaffold };
 }

@@ -1,7 +1,21 @@
-import { apiCall } from '../api/client.js';
+import { runPlan, type PlanStep } from '../api/orchestrate.js';
 
-// Auto-generated stub. Implement the orchestration described below.
+// Underlying API calls this tool orchestrates (in order), collapsing any
+// list-then-detail (N+1) pattern into a single response:
+//  - GET /api/v2/region/ :: List regions
+const plan: PlanStep[] = [
+  {
+    "id": "region_list",
+    "method": "GET",
+    "path": "/api/v2/region/",
+    "pathParams": [],
+    "purpose": "List regions"
+  }
+];
+
 export const list_region = {
+  name: "list_region",
+  description: "Task-oriented tool for region. Wraps 1 API endpoint(s) so a question is answered without multiple round-trips. Example question it answers: \"Describe the Kanto region and list the locations it contains.\".",
   inputSchema: {
   "type": "object",
   "properties": {
@@ -16,14 +30,6 @@ export const list_region = {
     }
   }
 } as const,
-
-  // Underlying API calls this tool should orchestrate (in order):
-  //  - GET /api/v2/region/ :: List regions
-  async handler(args: Record<string, unknown>) {
-    // TODO: orchestrate the underlying calls above, collapsing list-then-detail
-    // patterns into a single response. Respect max_items / include_details inputs.
-    void apiCall;
-    void args;
-    return { content: [{ type: 'text', text: 'Not implemented: list_region' }] };
-  },
+  plan,
+  handler: (args: Record<string, unknown>) => runPlan(plan, args),
 };

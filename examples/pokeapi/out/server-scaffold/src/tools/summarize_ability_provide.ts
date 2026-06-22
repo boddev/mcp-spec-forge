@@ -1,7 +1,61 @@
-import { apiCall } from '../api/client.js';
+import { runPlan, type PlanStep } from '../api/orchestrate.js';
 
-// Auto-generated stub. Implement the orchestration described below.
+// Underlying API calls this tool orchestrates (in order), collapsing any
+// list-then-detail (N+1) pattern into a single response:
+//  - GET /api/v2/ability/ :: Abilities provide passive effects for Pokémon in battle or in the overworld. Pokémon have multiple possible abilities but can have only one ability at a time. Check out [Bulbapedia](http://bulbapedia.bulbagarden.net/wiki/Ability) for greater detail.
+//  - GET /api/v2/ability/{id}/ :: Abilities provide passive effects for Pokémon in battle or in the overworld. Pokémon have multiple possible abilities but can have only one ability at a time. Check out [Bulbapedia](http://bulbapedia.bulbagarden.net/wiki/Ability) for greater detail. (foreach ability_list.items)
+//  - GET /api/v2/berry-flavor/{id}/ :: Get berries by flavor (foreach ability_list.items)
+const plan: PlanStep[] = [
+  {
+    "id": "ability_list",
+    "method": "GET",
+    "path": "/api/v2/ability/",
+    "pathParams": [],
+    "purpose": "Abilities provide passive effects for Pokémon in battle or in the overworld. Pokémon have multiple possible abilities but can have only one ability at a time. Check out [Bulbapedia](http://bulbapedia.bulbagarden.net/wiki/Ability) for greater detail."
+  },
+  {
+    "id": "ability_retrieve",
+    "method": "GET",
+    "path": "/api/v2/ability/{id}/",
+    "pathParams": [
+      "id"
+    ],
+    "purpose": "Abilities provide passive effects for Pokémon in battle or in the overworld. Pokémon have multiple possible abilities but can have only one ability at a time. Check out [Bulbapedia](http://bulbapedia.bulbagarden.net/wiki/Ability) for greater detail.",
+    "foreach": {
+      "sourceId": "ability_list",
+      "hint": "items"
+    },
+    "condition": {
+      "arg": "include_details",
+      "equals": true
+    },
+    "concurrency": 5,
+    "maxItems": 50
+  },
+  {
+    "id": "berry_flavor_retrieve",
+    "method": "GET",
+    "path": "/api/v2/berry-flavor/{id}/",
+    "pathParams": [
+      "id"
+    ],
+    "purpose": "Get berries by flavor",
+    "foreach": {
+      "sourceId": "ability_list",
+      "hint": "items"
+    },
+    "condition": {
+      "arg": "include_details",
+      "equals": true
+    },
+    "concurrency": 5,
+    "maxItems": 50
+  }
+];
+
 export const summarize_ability_provide = {
+  name: "summarize_ability_provide",
+  description: "Task-oriented tool for ability, provide, passive, berry. Wraps 3 API endpoint(s), collapsing a list-then-detail (N+1) pattern into a single call so a question is answered without multiple round-trips. Example question it answers: \"What are Pikachu's abilities and what does each one do?\".",
   inputSchema: {
   "type": "object",
   "required": [
@@ -28,16 +82,6 @@ export const summarize_ability_provide = {
     }
   }
 } as const,
-
-  // Underlying API calls this tool should orchestrate (in order):
-  //  - GET /api/v2/ability/ :: Abilities provide passive effects for Pokémon in battle or in the overworld. Pokémon have multiple possible abilities but can have only one ability at a time. Check out [Bulbapedia](http://bulbapedia.bulbagarden.net/wiki/Ability) for greater detail.
-  //  - GET /api/v2/ability/{id}/ :: Abilities provide passive effects for Pokémon in battle or in the overworld. Pokémon have multiple possible abilities but can have only one ability at a time. Check out [Bulbapedia](http://bulbapedia.bulbagarden.net/wiki/Ability) for greater detail. (foreach ability_list.items)
-  //  - GET /api/v2/berry-flavor/{id}/ :: Get berries by flavor (foreach ability_list.items)
-  async handler(args: Record<string, unknown>) {
-    // TODO: orchestrate the underlying calls above, collapsing list-then-detail
-    // patterns into a single response. Respect max_items / include_details inputs.
-    void apiCall;
-    void args;
-    return { content: [{ type: 'text', text: 'Not implemented: summarize_ability_provide' }] };
-  },
+  plan,
+  handler: (args: Record<string, unknown>) => runPlan(plan, args),
 };

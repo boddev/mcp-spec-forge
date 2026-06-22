@@ -1,7 +1,23 @@
-import { apiCall } from '../api/client.js';
+import { runPlan, type PlanStep } from '../api/orchestrate.js';
 
-// Auto-generated stub. Implement the orchestration described below.
+// Underlying API calls this tool orchestrates (in order), collapsing any
+// list-then-detail (N+1) pattern into a single response:
+//  - GET /api/v2/pokemon-species/{id}/ :: Get pokemon species
+const plan: PlanStep[] = [
+  {
+    "id": "pokemon_species_retrieve",
+    "method": "GET",
+    "path": "/api/v2/pokemon-species/{id}/",
+    "pathParams": [
+      "id"
+    ],
+    "purpose": "Get pokemon species"
+  }
+];
+
 export const get_pokemon_species = {
+  name: "get_pokemon_species",
+  description: "Task-oriented tool for pokemon, species. Wraps 1 API endpoint(s) so a question is answered without multiple round-trips. Example question it answers: \"For the Gen 1 generation, which Pokemon species were introduced?\".",
   inputSchema: {
   "type": "object",
   "required": [
@@ -14,14 +30,6 @@ export const get_pokemon_species = {
     }
   }
 } as const,
-
-  // Underlying API calls this tool should orchestrate (in order):
-  //  - GET /api/v2/pokemon-species/{id}/ :: Get pokemon species
-  async handler(args: Record<string, unknown>) {
-    // TODO: orchestrate the underlying calls above, collapsing list-then-detail
-    // patterns into a single response. Respect max_items / include_details inputs.
-    void apiCall;
-    void args;
-    return { content: [{ type: 'text', text: 'Not implemented: get_pokemon_species' }] };
-  },
+  plan,
+  handler: (args: Record<string, unknown>) => runPlan(plan, args),
 };

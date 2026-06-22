@@ -1,7 +1,21 @@
-import { apiCall } from '../api/client.js';
+import { runPlan, type PlanStep } from '../api/orchestrate.js';
 
-// Auto-generated stub. Implement the orchestration described below.
+// Underlying API calls this tool orchestrates (in order), collapsing any
+// list-then-detail (N+1) pattern into a single response:
+//  - GET /api/v2/stat/ :: List stats
+const plan: PlanStep[] = [
+  {
+    "id": "stat_list",
+    "method": "GET",
+    "path": "/api/v2/stat/",
+    "pathParams": [],
+    "purpose": "List stats"
+  }
+];
+
 export const list_stat = {
+  name: "list_stat",
+  description: "Task-oriented tool for stat. Wraps 1 API endpoint(s) so a question is answered without multiple round-trips. Example question it answers: \"What are the base stats of Mewtwo?\".",
   inputSchema: {
   "type": "object",
   "properties": {
@@ -16,14 +30,6 @@ export const list_stat = {
     }
   }
 } as const,
-
-  // Underlying API calls this tool should orchestrate (in order):
-  //  - GET /api/v2/stat/ :: List stats
-  async handler(args: Record<string, unknown>) {
-    // TODO: orchestrate the underlying calls above, collapsing list-then-detail
-    // patterns into a single response. Respect max_items / include_details inputs.
-    void apiCall;
-    void args;
-    return { content: [{ type: 'text', text: 'Not implemented: list_stat' }] };
-  },
+  plan,
+  handler: (args: Record<string, unknown>) => runPlan(plan, args),
 };

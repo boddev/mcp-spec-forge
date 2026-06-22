@@ -14,6 +14,7 @@ export interface BuildSpecArgs {
   endpoints: EndpointCard[];
   questions: QuestionFacets[];
   mode: 'deterministic' | 'llm';
+  baseUrl?: string;
 }
 
 export function buildDesign(args: BuildSpecArgs): McpDesign {
@@ -28,7 +29,8 @@ export function buildDesign(args: BuildSpecArgs): McpDesign {
         args.description ??
         `MCP server designed from an eval set of ${args.questions.length} questions over ${args.endpoints.length} documented API endpoint(s).`,
       version: '0.1.0',
-      transport: 'stdio',
+      transport: 'stdio | streamable-http',
+      baseUrl: args.baseUrl,
     },
     auth,
     tools: args.tools,

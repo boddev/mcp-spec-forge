@@ -95,8 +95,11 @@ describe('end-to-end forge', () => {
     expect(result.yaml).toMatch(/tools:/);
     expect(result.markdown).toMatch(/# MCP Server Design/);
 
-    // Scaffold includes a server entry and one module per tool.
-    expect(result.scaffold['src/server.ts']).toMatch(/McpServer/);
+    // Scaffold includes a transport-agnostic server builder, both transport
+    // entrypoints, and one module per tool.
+    expect(result.scaffold['src/buildServer.ts']).toMatch(/new Server\(/);
+    expect(result.scaffold['src/local.ts']).toMatch(/StdioServerTransport/);
+    expect(result.scaffold['src/http.ts']).toMatch(/StreamableHTTPServerTransport/);
     for (const t of result.design.tools) {
       expect(result.scaffold[`src/tools/${t.name}.ts`]).toBeDefined();
     }
