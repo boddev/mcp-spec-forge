@@ -1,0 +1,13 @@
+prompt,expected_answer,source_location
+"What are Pikachu's abilities and what does each one do?","Pikachu has the abilities Static and Lightning Rod; describe the effect text of each.",https://pokeapi.co/docs/v2#pokemon
+"List the first 20 Pokemon and show each one's types.","The first 20 Pokemon by id with their type names (e.g. Bulbasaur: grass/poison).",https://pokeapi.co/docs/v2#pokemon
+"What moves can Charizard learn, and what is the power and type of each move?","Charizard's learnable moves with each move's power and damage type.",https://pokeapi.co/docs/v2#pokemon
+"What is the evolution chain for Bulbasaur?","Bulbasaur -> Ivysaur -> Venusaur with the trigger conditions.",https://pokeapi.co/docs/v2#evolution-chains
+"Which berries affect a Pokemon's happiness, and what flavor is each one?","Berries with a smoothness/affecting effect and their associated flavors.",https://pokeapi.co/docs/v2#berries
+"What are the effects of the ability Overgrow?","The effect text describing Overgrow boosting grass moves at low HP.",https://pokeapi.co/docs/v2#abilities
+"Describe the Kanto region and list the locations it contains.","Kanto region details plus the names of locations within it.",https://pokeapi.co/docs/v2#regions
+"What items are in the medicine category and what does each item do?","Items in the medicine item-category with each item's effect.",https://pokeapi.co/docs/v2#items
+"What are the base stats of Mewtwo?","Mewtwo's six base stats (hp, attack, defense, sp. atk, sp. def, speed).",https://pokeapi.co/docs/v2#pokemon
+"List all Pokemon types and what each type is strong against.","The 18 types and each type's damage relations (double_damage_to).",https://pokeapi.co/docs/v2#types
+"What Pokemon can be found in the Viridian Forest and by what encounter method?","Pokemon encounters at the viridian-forest location-area with encounter methods.",https://pokeapi.co/docs/v2#locations
+"For the Gen 1 generation, which Pokemon species were introduced?","The list of species names introduced in generation-i.",https://pokeapi.co/docs/v2#generations

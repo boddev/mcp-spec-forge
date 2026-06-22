@@ -26,6 +26,7 @@ export function tokenize(text: string): string[] {
 /** Crude singularizer so "issues"/"issue" match. */
 export function singularize(word: string): string {
   if (word.length <= 3) return word;
+  if (INVARIANT_NOUNS.has(word)) return word;
   if (word.endsWith('ies')) return word.slice(0, -3) + 'y';
   if (word.endsWith('ses') || word.endsWith('xes') || word.endsWith('ches')) {
     return word.slice(0, -2);
@@ -33,6 +34,11 @@ export function singularize(word: string): string {
   if (word.endsWith('s') && !word.endsWith('ss')) return word.slice(0, -1);
   return word;
 }
+
+// Words whose singular and plural forms are identical (or are uncountable).
+const INVARIANT_NOUNS = new Set([
+  'species', 'series', 'news', 'data', 'media', 'status', 'analysis',
+]);
 
 export function tokenSet(text: string): Set<string> {
   return new Set(tokenize(text));

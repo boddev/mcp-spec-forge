@@ -7027,6 +7027,7 @@ function tokenize(text) {
 }
 function singularize(word) {
   if (word.length <= 3) return word;
+  if (INVARIANT_NOUNS.has(word)) return word;
   if (word.endsWith("ies")) return word.slice(0, -3) + "y";
   if (word.endsWith("ses") || word.endsWith("xes") || word.endsWith("ches")) {
     return word.slice(0, -2);
@@ -7034,6 +7035,15 @@ function singularize(word) {
   if (word.endsWith("s") && !word.endsWith("ss")) return word.slice(0, -1);
   return word;
 }
+var INVARIANT_NOUNS = /* @__PURE__ */ new Set([
+  "species",
+  "series",
+  "news",
+  "data",
+  "media",
+  "status",
+  "analysis"
+]);
 function jaccard(a, b) {
   if (a.size === 0 || b.size === 0) return 0;
   let inter = 0;
@@ -7222,12 +7232,30 @@ function extractEntities(path, summary, opId) {
     if (!seg || seg.startsWith("{")) continue;
     const clean = seg.replace(/[^a-zA-Z0-9]/g, " ").trim();
     for (const tok of clean.split(/\s+/)) {
-      if (tok.length > 2) entities.add(singularize(tok.toLowerCase()));
+      const lower = tok.toLowerCase();
+      if (tok.length > 2 && !PATH_STOPWORDS.has(lower) && !/^v\d+$/.test(lower)) {
+        entities.add(singularize(lower));
+      }
     }
   }
   for (const tok of tokenize(`${summary} ${opId ?? ""}`)) entities.add(tok);
   return [...entities];
 }
+var PATH_STOPWORDS = /* @__PURE__ */ new Set([
+  "api",
+  "rest",
+  "public",
+  "private",
+  "json",
+  "xml",
+  "www",
+  "http",
+  "https",
+  "service",
+  "services",
+  "endpoint",
+  "endpoints"
+]);
 function detectPagination(inputs) {
   const names = inputs.map((i) => i.name.toLowerCase());
   if (names.includes("page")) return "page";

@@ -209,13 +209,22 @@ export function extractEntities(path: string, summary: string, opId?: string): s
     if (!seg || seg.startsWith('{')) continue;
     const clean = seg.replace(/[^a-zA-Z0-9]/g, ' ').trim();
     for (const tok of clean.split(/\s+/)) {
-      if (tok.length > 2) entities.add(singularize(tok.toLowerCase()));
+      const lower = tok.toLowerCase();
+      if (tok.length > 2 && !PATH_STOPWORDS.has(lower) && !/^v\d+$/.test(lower)) {
+        entities.add(singularize(lower));
+      }
     }
   }
   // A couple of salient nouns from the summary/operationId.
   for (const tok of tokenize(`${summary} ${opId ?? ''}`)) entities.add(tok);
   return [...entities];
 }
+
+// Common API routing/prefix segments that are never the real domain entity.
+const PATH_STOPWORDS = new Set([
+  'api', 'rest', 'public', 'private', 'json', 'xml', 'www', 'http', 'https',
+  'service', 'services', 'endpoint', 'endpoints',
+]);
 
 function detectPagination(inputs: EndpointParam[]): string | undefined {
   const names = inputs.map((i) => i.name.toLowerCase());
