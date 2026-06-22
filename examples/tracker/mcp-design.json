@@ -1,0 +1,372 @@
+{
+  "server": {
+    "name": "tracker-mcp",
+    "description": "MCP server designed from an eval set of 6 questions over 7 documented API endpoint(s).",
+    "version": "0.1.0",
+    "transport": "stdio"
+  },
+  "auth": {
+    "type": "bearer_token",
+    "envVar": "API_TOKEN"
+  },
+  "tools": [
+    {
+      "name": "summarize_issue_repo",
+      "description": "Task-oriented tool for issue, repo, across, comment. Wraps 3 API endpoint(s), collapsing a list-then-detail (N+1) pattern into a single call so a question is answered without multiple round-trips. Example question it answers: \"What open issues are assigned to Sarah across the backend repo?\".",
+      "evalCoverage": [
+        "q1",
+        "q2",
+        "q3",
+        "q6"
+      ],
+      "entities": [
+        "issue",
+        "repo",
+        "across",
+        "comment"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "owner",
+          "repo",
+          "number"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string"
+          },
+          "repo": {
+            "type": "string"
+          },
+          "number": {
+            "type": "integer"
+          },
+          "q": {
+            "type": "string"
+          },
+          "max_items": {
+            "type": "integer",
+            "description": "Maximum records to return (caps pagination).",
+            "default": 50
+          },
+          "include_details": {
+            "type": "boolean",
+            "description": "Expand each result with its detail/sub-resource calls in one round-trip.",
+            "default": true
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "number": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "assignee": {
+                  "type": "string"
+                },
+                "labels": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "body": {
+                  "type": "string"
+                },
+                "author": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "count": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "True if max_items capped the result."
+          }
+        }
+      },
+      "underlyingCalls": [
+        {
+          "id": "searchIssues",
+          "endpoint": "GET /search/issues",
+          "purpose": "Search issues across repositories"
+        },
+        {
+          "id": "listIssueComments",
+          "endpoint": "GET /repos/{owner}/{repo}/issues/{number}/comments",
+          "purpose": "List comments on an issue",
+          "params": {
+            "owner": "{owner}",
+            "repo": "{repo}",
+            "number": "{number}"
+          }
+        },
+        {
+          "id": "getIssue",
+          "endpoint": "GET /repos/{owner}/{repo}/issues/{number}",
+          "purpose": "Get a single issue by number",
+          "params": {
+            "owner": "{owner}",
+            "repo": "{repo}",
+            "number": "{number}"
+          },
+          "foreach": "searchIssues.items",
+          "condition": "include_details == true",
+          "concurrency": 5,
+          "maxItems": 50
+        }
+      ],
+      "pagination": {
+        "strategy": "auto_paginate_until_limit",
+        "maxPages": 5
+      },
+      "rateLimiting": {
+        "strategy": "bounded_concurrency",
+        "retry": {
+          "onStatus": [
+            429,
+            503
+          ],
+          "backoff": "exponential"
+        }
+      },
+      "errors": {
+        "partialResults": true,
+        "userVisibleMessages": {
+          "auth_failed": "Authentication failed. Check the configured credentials.",
+          "rate_limited": "The API rate limit was reached. Partial results may be returned.",
+          "not_found": "No matching records were found for the given inputs."
+        }
+      },
+      "reviewFlags": []
+    },
+    {
+      "name": "list_project_task",
+      "description": "Task-oriented tool for project, task. Wraps 1 API endpoint(s) so a question is answered without multiple round-trips. Example question it answers: \"List all active projects and their tasks\".",
+      "evalCoverage": [
+        "q4"
+      ],
+      "entities": [
+        "project",
+        "task"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "projectId"
+        ],
+        "properties": {
+          "projectId": {
+            "type": "integer"
+          },
+          "max_items": {
+            "type": "integer",
+            "description": "Maximum records to return (caps pagination).",
+            "default": 50
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "done": {
+                  "type": "string"
+                },
+                "assignee": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "count": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "True if max_items capped the result."
+          }
+        }
+      },
+      "underlyingCalls": [
+        {
+          "id": "listProjectTasks",
+          "endpoint": "GET /projects/{projectId}/tasks",
+          "purpose": "List tasks for a project",
+          "params": {
+            "projectId": "{projectId}"
+          }
+        }
+      ],
+      "pagination": {
+        "strategy": "auto_paginate_until_limit",
+        "maxPages": 5
+      },
+      "rateLimiting": {
+        "strategy": "bounded_concurrency",
+        "retry": {
+          "onStatus": [
+            429,
+            503
+          ],
+          "backoff": "exponential"
+        }
+      },
+      "errors": {
+        "partialResults": false,
+        "userVisibleMessages": {
+          "auth_failed": "Authentication failed. Check the configured credentials.",
+          "rate_limited": "The API rate limit was reached. Partial results may be returned.",
+          "not_found": "No matching records were found for the given inputs."
+        }
+      },
+      "reviewFlags": []
+    },
+    {
+      "name": "list_project",
+      "description": "Task-oriented tool for project. Wraps 1 API endpoint(s) so a question is answered without multiple round-trips. Example question it answers: \"Who is the owner of the billing project?\".",
+      "evalCoverage": [
+        "q5"
+      ],
+      "entities": [
+        "project"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "max_items": {
+            "type": "integer",
+            "description": "Maximum records to return (caps pagination).",
+            "default": 50
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "owner": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "count": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "True if max_items capped the result."
+          }
+        }
+      },
+      "underlyingCalls": [
+        {
+          "id": "listProjects",
+          "endpoint": "GET /projects",
+          "purpose": "List all projects"
+        }
+      ],
+      "pagination": {
+        "strategy": "auto_paginate_until_limit",
+        "maxPages": 5
+      },
+      "rateLimiting": {
+        "strategy": "bounded_concurrency",
+        "retry": {
+          "onStatus": [
+            429,
+            503
+          ],
+          "backoff": "exponential"
+        }
+      },
+      "errors": {
+        "partialResults": false,
+        "userVisibleMessages": {
+          "auth_failed": "Authentication failed. Check the configured credentials.",
+          "rate_limited": "The API rate limit was reached. Partial results may be returned.",
+          "not_found": "No matching records were found for the given inputs."
+        }
+      },
+      "reviewFlags": []
+    }
+  ],
+  "resources": [
+    {
+      "name": "api_capability_index",
+      "description": "Normalized index of the 7 documented API endpoints (method, path, params, response fields) the tools are built from.",
+      "uri": "forge://capabilities"
+    },
+    {
+      "name": "eval_coverage_matrix",
+      "description": "Maps each evaluation question to the tool that answers it, with confidence and gaps.",
+      "uri": "forge://coverage"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "answer_with_api_context",
+      "description": "System/template prompt instructing the model to select the single best task-oriented tool, pass minimal inputs, and avoid issuing redundant multi-call sequences."
+    },
+    {
+      "name": "route_question_to_tool",
+      "description": "Few-shot template mapping representative eval questions to the tool that should handle them."
+    }
+  ],
+  "meta": {
+    "generatedAt": "2026-06-22T17:49:55.821Z",
+    "generator": "mcp-spec-forge",
+    "endpointCount": 7,
+    "questionCount": 6,
+    "mode": "deterministic"
+  }
+}

@@ -1,0 +1,6 @@
+node_modules/
+dist/
+*.log
+.env
+# generated example outputs are tracked; runtime scratch is not
+/tmp/

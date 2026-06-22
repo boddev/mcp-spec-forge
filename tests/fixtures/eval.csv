@@ -1,0 +1,7 @@
+prompt,expected_answer,source_location
+"What open issues are assigned to Sarah across the backend repo?","A list of open issues assigned to Sarah","Tracker API",
+"Show me the details and all comments for each open issue in the backend repo","Each open issue with its full comment history","Tracker API",
+"Find issues mentioning authentication bugs","Issues matching the authentication search","Tracker API",
+"List all active projects and their tasks","Every active project with its task breakdown","Tracker API",
+"Who is the owner of the billing project?","The owner user of the billing project","Tracker API",
+"What is the status of issue number 42 in the backend repo?","The current state of issue 42","Tracker API",

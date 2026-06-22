@@ -1,0 +1,157 @@
+openapi: 3.0.3
+info:
+  title: Project Tracker API
+  version: "1.0"
+servers:
+  - url: https://api.tracker.example.com/v1
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Issue:
+      type: object
+      properties:
+        id: { type: integer }
+        number: { type: integer }
+        title: { type: string }
+        state: { type: string }
+        assignee: { type: string }
+        labels:
+          type: array
+          items: { type: string }
+        updated_at: { type: string }
+    Comment:
+      type: object
+      properties:
+        id: { type: integer }
+        body: { type: string }
+        author: { type: string }
+        created_at: { type: string }
+    Project:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        status: { type: string }
+        owner: { type: string }
+    Task:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        done: { type: boolean }
+        assignee: { type: string }
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+security:
+  - bearerAuth: []
+paths:
+  /repos/{owner}/{repo}/issues:
+    get:
+      operationId: listIssues
+      summary: List issues in a repository
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: state, in: query, schema: { type: string } }
+        - { name: assignee, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer } }
+      responses:
+        "200":
+          description: A list of issues
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Issue" }
+  /repos/{owner}/{repo}/issues/{number}:
+    get:
+      operationId: getIssue
+      summary: Get a single issue by number
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: number, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: The issue
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Issue" }
+  /repos/{owner}/{repo}/issues/{number}/comments:
+    get:
+      operationId: listIssueComments
+      summary: List comments on an issue
+      parameters:
+        - { name: owner, in: path, required: true, schema: { type: string } }
+        - { name: repo, in: path, required: true, schema: { type: string } }
+        - { name: number, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Comment" }
+  /search/issues:
+    get:
+      operationId: searchIssues
+      summary: Search issues across repositories
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer } }
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Issue" }
+  /projects:
+    get:
+      operationId: listProjects
+      summary: List all projects
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: Projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Project" }
+  /projects/{projectId}/tasks:
+    get:
+      operationId: listProjectTasks
+      summary: List tasks for a project
+      parameters:
+        - { name: projectId, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Task" }
+  /users/{userId}:
+    get:
+      operationId: getUser
+      summary: Get a user by id
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: The user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }

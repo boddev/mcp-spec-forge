@@ -1,0 +1,31 @@
+{
+  "name": "mcp-spec-forge",
+  "version": "0.1.0",
+  "description": "Ingest an eval set + documented APIs and forge an MCP server design spec with task-oriented, call-minimizing tools.",
+  "type": "module",
+  "bin": {
+    "mcp-spec-forge": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "forge": "tsx src/cli.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": ["mcp", "model-context-protocol", "openapi", "eval", "codegen"],
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "commander": "^12.1.0",
+    "csv-parse": "^5.5.6",
+    "js-yaml": "^4.1.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.7.4",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.2"
+  }
+}
