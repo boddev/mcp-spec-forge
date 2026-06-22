@@ -57,9 +57,12 @@ export function planQuestions(
         const lexical = overlapScore(qTokens, tokens);
         const entity = jaccard(qEntities, entitySet);
         const fields = overlapScore(qEntities, fieldTokens) * 0.6;
-        const verbBonus = card.verb === q.verb ? 0.1 : 0;
+        const verbBonus = verbAffinity(q.verb, card.verb);
         const confidence = card.confidence;
-        const score = (lexical * 0.5 + entity * 0.3 + fields * 0.2 + verbBonus) * confidence;
+        const score =
+          (lexical * 0.5 + entity * 0.3 + fields * 0.2 + verbBonus) *
+          confidence *
+          specialOpPenalty(card.path);
         return { endpoint: card, score };
       })
       .filter((m) => m.score >= minScore)
@@ -73,4 +76,32 @@ export function planQuestions(
 
     return { question: q, matches: scored, isChain };
   });
+}
+
+// Special/RPC-style operations (FHIR $operations, _history versioning, _search)
+// are side endpoints, not the primary way to retrieve a resource. Penalize them
+// so plain resource search/read endpoints win the match.
+const SPECIAL_SEGMENT = /(?:^|\/)(?:\$[a-z]|_history|_search|_validate)/i;
+
+function specialOpPenalty(path: string): number {
+  return SPECIAL_SEGMENT.test(path) ? 0.4 : 1;
+}
+
+// `list` and `search` both retrieve a collection; reward that affinity so a
+// list-intent question prefers the search/list endpoint over a read-by-id.
+const VERB_GROUP: Record<string, string> = {
+  list: 'collection',
+  search: 'collection',
+  get: 'item',
+  aggregate: 'aggregate',
+  create: 'create',
+  update: 'update',
+  delete: 'delete',
+};
+
+function verbAffinity(qVerb: string, endpointVerb: string): number {
+  if (!qVerb || !endpointVerb) return 0;
+  if (qVerb === endpointVerb) return 0.1;
+  const gq = VERB_GROUP[qVerb];
+  return gq && gq === VERB_GROUP[endpointVerb] ? 0.1 : 0;
 }

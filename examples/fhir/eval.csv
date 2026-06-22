@@ -1,0 +1,13 @@
+prompt,expected_answer,source_location
+"Find all patients named Smith and show each patient's birth date and gender.","Patients matching name Smith with each patient's birthDate and gender.",https://hl7.org/fhir/R4/patient.html
+"What are the most recent vital-sign observations for patient 12345?","Observation resources for the patient filtered to vital-signs with value and effective date.",https://hl7.org/fhir/R4/observation.html
+"List the active conditions (problems) recorded for a given patient.","Condition resources where clinicalStatus is active for the patient, with code and onset.",https://hl7.org/fhir/R4/condition.html
+"What medications has patient 67890 been prescribed and what is the dosage of each?","MedicationRequest resources for the patient with medication and dosageInstruction.",https://hl7.org/fhir/R4/medicationrequest.html
+"Show all encounters for a patient and the reason and date of each visit.","Encounter resources for the patient with reasonCode, period start, and class.",https://hl7.org/fhir/R4/encounter.html
+"Retrieve the details of a specific patient by id including their address and contact info.","A single Patient read by id with address and telecom details.",https://hl7.org/fhir/R4/patient.html
+"Find lab results with abnormal values for a patient over the last year.","Observation resources in the laboratory category with interpretation flags for the patient.",https://hl7.org/fhir/R4/observation.html
+"What allergies and intolerances are documented for patient 12345?","AllergyIntolerance resources for the patient with substance and reaction.",https://hl7.org/fhir/R4/allergyintolerance.html
+"List all immunizations a patient has received and the date of each.","Immunization resources for the patient with vaccineCode and occurrenceDateTime.",https://hl7.org/fhir/R4/immunization.html
+"Which practitioners are associated with a patient's care team?","CareTeam or Practitioner references for the patient with role and name.",https://hl7.org/fhir/R4/careteam.html
+"Find diagnostic reports for a patient and summarize the conclusion of each.","DiagnosticReport resources for the patient with code, issued date, and conclusion.",https://hl7.org/fhir/R4/diagnosticreport.html
+"Show the procedures performed on patient 67890 and when each occurred.","Procedure resources for the patient with code and performedDateTime.",https://hl7.org/fhir/R4/procedure.html

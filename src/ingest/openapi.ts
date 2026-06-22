@@ -201,10 +201,11 @@ export function classifyVerb(method: string, path: string, summary: string, opId
   if (m === 'POST' && !/search|query|find/.test(text)) return 'create';
   if (m === 'PUT' || m === 'PATCH') return 'update';
   if (m === 'DELETE') return 'delete';
+  // A path ending in a parameter is a single-resource fetch, regardless of any
+  // verb-like words in the summary (e.g. a resource literally named "List").
+  if (/\{[^}]+\}\/?$/.test(path)) return 'get';
   if (/search|query|find/.test(text)) return 'search';
   if (/\b(list|all|index)\b/.test(text)) return 'list';
-  // Path ending in a parameter => single resource fetch.
-  if (/\{[^}]+\}\/?$/.test(path)) return 'get';
   if (m === 'GET') return 'list';
   return 'unknown';
 }
@@ -214,6 +215,9 @@ export function extractEntities(path: string, summary: string, opId?: string): s
   // Path segments that are not parameters are likely entity/collection names.
   for (const seg of path.split('/')) {
     if (!seg || seg.startsWith('{')) continue;
+    // FHIR/REST special operations & interactions ($validate, $export, _history,
+    // _search) are not domain entities — skip them so they don't pollute names.
+    if (seg.startsWith('$') || seg.startsWith('_')) continue;
     const clean = seg.replace(/[^a-zA-Z0-9]/g, ' ').trim();
     for (const tok of clean.split(/\s+/)) {
       const lower = tok.toLowerCase();
@@ -222,8 +226,15 @@ export function extractEntities(path: string, summary: string, opId?: string): s
       }
     }
   }
-  // A couple of salient nouns from the summary/operationId.
-  for (const tok of tokenize(`${summary} ${opId ?? ''}`)) entities.add(tok);
+  // The path usually encodes the real domain entity. Only fall back to nouns from
+  // the summary/operationId when the path yielded nothing (e.g. opaque RPC paths),
+  // since interaction descriptions ("Read X instance") otherwise leak verb noise.
+  if (entities.size === 0) {
+    const cleanSummary = stripInteractionPrefix(summary);
+    for (const tok of tokenize(`${cleanSummary} ${opId ?? ''}`)) {
+      if (!ENTITY_NOISE.has(tok)) entities.add(tok);
+    }
+  }
   return [...entities];
 }
 
@@ -232,6 +243,18 @@ const PATH_STOPWORDS = new Set([
   'api', 'rest', 'public', 'private', 'json', 'xml', 'www', 'http', 'https',
   'service', 'services', 'endpoint', 'endpoints',
 ]);
+
+// Structural words that describe the kind of REST interaction, not the entity.
+const ENTITY_NOISE = new Set(['instance', 'resource']);
+
+// Machine interaction labels some specs prefix summaries with, e.g. FHIR's
+// "search-type: Search for Patient instances" or "GET: /Observation/$validate".
+const INTERACTION_PREFIX =
+  /^(?:search|read|vread|create|update|delete|patch|history|capabilities|transaction|batch|operation|get|post|put|head|options)(?:-(?:type|instance|system))?\s*:\s*/i;
+
+function stripInteractionPrefix(summary: string): string {
+  return summary.replace(INTERACTION_PREFIX, '');
+}
 
 function detectPagination(inputs: EndpointParam[]): string | undefined {
   const names = inputs.map((i) => i.name.toLowerCase());

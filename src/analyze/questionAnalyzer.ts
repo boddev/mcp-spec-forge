@@ -22,7 +22,7 @@ export function analyzeQuestions(questions: EvalQuestion[]): QuestionFacets[] {
 }
 
 export function analyzeOne(q: EvalQuestion): QuestionFacets {
-  const keywords = tokenize(q.prompt);
+  const keywords = stripLeadingCommand(tokenize(q.prompt));
   const verb = classifyQuestionVerb(q.prompt);
   const entities = extractQuestionEntities(keywords);
   const needsDetailExpansion = DETAIL_SIGNALS.some((s) =>
@@ -37,6 +37,18 @@ export function analyzeOne(q: EvalQuestion): QuestionFacets {
     keywords,
     needsDetailExpansion,
   };
+}
+
+// Imperative command verbs that open a prompt ("List the…", "Show all…") describe
+// the action, not the subject — drop them so they can't lexically match a resource
+// that happens to share the name (e.g. FHIR's `List` resource).
+const COMMAND_VERBS = new Set([
+  'list', 'show', 'get', 'find', 'search', 'retrieve', 'fetch', 'give', 'display',
+  'return', 'tell', 'name', 'provide', 'summarize', 'count', 'lookup',
+]);
+
+function stripLeadingCommand(keywords: string[]): string[] {
+  return keywords.length && COMMAND_VERBS.has(keywords[0]) ? keywords.slice(1) : keywords;
 }
 
 function classifyQuestionVerb(prompt: string): VerbClass {

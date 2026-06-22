@@ -7225,9 +7225,9 @@ function classifyVerb(method, path, summary, opId) {
   if (m === "POST" && !/search|query|find/.test(text)) return "create";
   if (m === "PUT" || m === "PATCH") return "update";
   if (m === "DELETE") return "delete";
+  if (/\{[^}]+\}\/?$/.test(path)) return "get";
   if (/search|query|find/.test(text)) return "search";
   if (/\b(list|all|index)\b/.test(text)) return "list";
-  if (/\{[^}]+\}\/?$/.test(path)) return "get";
   if (m === "GET") return "list";
   return "unknown";
 }
@@ -7235,6 +7235,7 @@ function extractEntities(path, summary, opId) {
   const entities = /* @__PURE__ */ new Set();
   for (const seg of path.split("/")) {
     if (!seg || seg.startsWith("{")) continue;
+    if (seg.startsWith("$") || seg.startsWith("_")) continue;
     const clean = seg.replace(/[^a-zA-Z0-9]/g, " ").trim();
     for (const tok of clean.split(/\s+/)) {
       const lower = tok.toLowerCase();
@@ -7243,7 +7244,12 @@ function extractEntities(path, summary, opId) {
       }
     }
   }
-  for (const tok of tokenize(`${summary} ${opId ?? ""}`)) entities.add(tok);
+  if (entities.size === 0) {
+    const cleanSummary = stripInteractionPrefix(summary);
+    for (const tok of tokenize(`${cleanSummary} ${opId ?? ""}`)) {
+      if (!ENTITY_NOISE.has(tok)) entities.add(tok);
+    }
+  }
   return [...entities];
 }
 var PATH_STOPWORDS = /* @__PURE__ */ new Set([
@@ -7261,6 +7267,11 @@ var PATH_STOPWORDS = /* @__PURE__ */ new Set([
   "endpoint",
   "endpoints"
 ]);
+var ENTITY_NOISE = /* @__PURE__ */ new Set(["instance", "resource"]);
+var INTERACTION_PREFIX = /^(?:search|read|vread|create|update|delete|patch|history|capabilities|transaction|batch|operation|get|post|put|head|options)(?:-(?:type|instance|system))?\s*:\s*/i;
+function stripInteractionPrefix(summary) {
+  return summary.replace(INTERACTION_PREFIX, "");
+}
 function detectPagination(inputs) {
   const names = inputs.map((i) => i.name.toLowerCase());
   if (names.includes("page")) return "page";
@@ -7348,7 +7359,7 @@ function analyzeQuestions(questions) {
   return questions.map(analyzeOne);
 }
 function analyzeOne(q) {
-  const keywords = tokenize(q.prompt);
+  const keywords = stripLeadingCommand(tokenize(q.prompt));
   const verb = classifyQuestionVerb(q.prompt);
   const entities = extractQuestionEntities(keywords);
   const needsDetailExpansion = DETAIL_SIGNALS.some(
@@ -7363,6 +7374,27 @@ function analyzeOne(q) {
     keywords,
     needsDetailExpansion
   };
+}
+var COMMAND_VERBS = /* @__PURE__ */ new Set([
+  "list",
+  "show",
+  "get",
+  "find",
+  "search",
+  "retrieve",
+  "fetch",
+  "give",
+  "display",
+  "return",
+  "tell",
+  "name",
+  "provide",
+  "summarize",
+  "count",
+  "lookup"
+]);
+function stripLeadingCommand(keywords) {
+  return keywords.length && COMMAND_VERBS.has(keywords[0]) ? keywords.slice(1) : keywords;
 }
 function classifyQuestionVerb(prompt) {
   for (const [verb, re] of VERB_HINTS) {
@@ -7403,14 +7435,33 @@ function planQuestions(questions, endpoints, opts = {}) {
       const lexical = overlapScore(qTokens, tokens);
       const entity = jaccard(qEntities, entitySet);
       const fields = overlapScore(qEntities, fieldTokens) * 0.6;
-      const verbBonus = card.verb === q.verb ? 0.1 : 0;
+      const verbBonus = verbAffinity(q.verb, card.verb);
       const confidence = card.confidence;
-      const score = (lexical * 0.5 + entity * 0.3 + fields * 0.2 + verbBonus) * confidence;
+      const score = (lexical * 0.5 + entity * 0.3 + fields * 0.2 + verbBonus) * confidence * specialOpPenalty(card.path);
       return { endpoint: card, score };
     }).filter((m) => m.score >= minScore).sort((a, b) => b.score - a.score).slice(0, topK);
     const isChain = q.needsDetailExpansion && scored.some((m) => m.endpoint.verb === "list" || m.endpoint.verb === "search") && scored.some((m) => m.endpoint.verb === "get");
     return { question: q, matches: scored, isChain };
   });
+}
+var SPECIAL_SEGMENT = /(?:^|\/)(?:\$[a-z]|_history|_search|_validate)/i;
+function specialOpPenalty(path) {
+  return SPECIAL_SEGMENT.test(path) ? 0.4 : 1;
+}
+var VERB_GROUP = {
+  list: "collection",
+  search: "collection",
+  get: "item",
+  aggregate: "aggregate",
+  create: "create",
+  update: "update",
+  delete: "delete"
+};
+function verbAffinity(qVerb, endpointVerb) {
+  if (!qVerb || !endpointVerb) return 0;
+  if (qVerb === endpointVerb) return 0.1;
+  const gq = VERB_GROUP[qVerb];
+  return gq && gq === VERB_GROUP[endpointVerb] ? 0.1 : 0;
 }
 
 // src/analyze/grouping.ts

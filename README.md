@@ -43,6 +43,10 @@ node bin/forge.cjs generate -e <eval.csv> -o <api.openapi.yaml> --name my-mcp -O
 # Example (bundled fixtures):
 node bin/forge.cjs generate -e tests/fixtures/eval.csv -o tests/fixtures/api.openapi.yaml `
   --name tracker-mcp -O examples/tracker --scaffold
+
+# Real-world example — live FHIR R4 (HLS) spec straight from a URL:
+node bin/forge.cjs generate -e examples/fhir/eval.csv -o https://hapi.fhir.org/baseR4/api-docs `
+  --name "FHIR R4" -O examples/fhir/out --scaffold --transport both
 ```
 
 Options:
@@ -103,6 +107,7 @@ src/                  # engine source (bundled into bin/forge.cjs)
   llm/      provider.ts
 tests/      pipeline.test.ts  fixtures/
 examples/   tracker/   (sample generated output)
+            fhir/      (real-world HLS example: eval set + live-FHIR spec output)
 ```
 
 ## Develop

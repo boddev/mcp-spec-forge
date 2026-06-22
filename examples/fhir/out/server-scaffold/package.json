@@ -1,0 +1,25 @@
+{
+  "name": "FHIR R4",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "FHIR R4": "src/local.ts"
+  },
+  "scripts": {
+    "start:stdio": "tsx src/local.ts",
+    "start:http": "tsx src/http.ts",
+    "start": "tsx src/local.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2",
+    "@types/node": "^22.7.4",
+    "@types/express": "^4.17.21"
+  }
+}
