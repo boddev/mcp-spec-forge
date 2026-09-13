@@ -18,7 +18,7 @@
   "dependencies": {
     "commander": "^12.1.0",
     "csv-parse": "^5.5.6",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.3.2"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
